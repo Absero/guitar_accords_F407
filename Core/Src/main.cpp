@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 #include "dma.h"
 #include "i2c.h"
 #include "i2s.h"
@@ -26,32 +27,17 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "stm32f4_discovery_audio.h"
-#include <math.h>
-#include <stdlib.h>
-#include <time.h>
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-typedef struct {
-	uint32_t N;
-	uint32_t totalNum;
-	uint32_t currentNum;
-	int32_t previousValue;
-	uint32_t current_wav_i;
-	uint8_t newWaveTable;
-} note_data_t;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define SAMPLING_FREQ 44100  //BSP_audio_out sampling frequency
-#define BUFF_SIZE  256/2
-#define BLOCKSIZE   32
-#define NUMBLOCKS    (BUFF_SIZE/BLOCKSIZE)
 
-#define randInRange(min, max) ((rand() % (int)(((max) + 1) - (min))) + (min))
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -62,17 +48,14 @@ typedef struct {
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-note_data_t gCN;
-
-static int16_t OutputBuffer[BUFF_SIZE * 2] = { 0 };  //Output, left+right channels
-static float gOutputBuffer[BUFF_SIZE] = { 0 };
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
-void fillBuffer(uint8_t partN);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -86,7 +69,6 @@ void fillBuffer(uint8_t partN);
  */
 int main(void) {
 	/* USER CODE BEGIN 1 */
-	srand(time(NULL));
 
 	/* USER CODE END 1 */
 
@@ -112,28 +94,22 @@ int main(void) {
 	MX_DMA_Init();
 	MX_I2S3_Init();
 	/* USER CODE BEGIN 2 */
-#define NOTE_F 110
-#define TIMENOTE 3
-	gCN.N = (uint32_t) round(SAMPLING_FREQ / NOTE_F - 0.5);
-	gCN.currentNum = 0;
-	gCN.totalNum = SAMPLING_FREQ * TIMENOTE - (SAMPLING_FREQ * TIMENOTE) % BUFF_SIZE;
-	gCN.newWaveTable = 1;
 
-	if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_AUTO, 80, SAMPLING_FREQ) != AUDIO_OK) Error_Handler();
-
-	fillBuffer(0);
-	fillBuffer(1);
-	BSP_AUDIO_OUT_Play((uint16_t*) OutputBuffer, BUFF_SIZE * 2);
 	/* USER CODE END 2 */
 
+	/* Init scheduler */
+	osKernelInitialize(); /* Call init function for freertos objects (in freertos.c) */
+	MX_FREERTOS_Init();
+	/* Start scheduler */
+	osKernelStart();
+
+	/* We should never get here as control is now taken by the scheduler */
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	while (1) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-		HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-		HAL_Delay(1000);
 	}
 	/* USER CODE END 3 */
 }
@@ -179,48 +155,6 @@ void SystemClock_Config(void) {
 }
 
 /* USER CODE BEGIN 4 */
-void BSP_AUDIO_OUT_HalfTransfer_CallBack(void) {
-	fillBuffer(0);
-}
-
-/*** Back to Buffer beginning ***/
-void BSP_AUDIO_OUT_TransferComplete_CallBack(void) {
-	BSP_AUDIO_OUT_ChangeBuffer((uint16_t*) OutputBuffer, BUFF_SIZE * 2);
-
-	fillBuffer(1);
-}
-int16_t wavetable[1000];
-
-void fillBuffer(uint8_t partN) {
-	if (gCN.newWaveTable == 1) {
-		gCN.newWaveTable = 0;
-		gCN.current_wav_i = 0;
-		gCN.previousValue = 0;
-		gCN.currentNum = 0;
-
-		for (uint32_t i = 0; i < gCN.N; i++)
-			wavetable[i] = (int16_t) randInRange(-30000, 30000);
-	}
-
-	if (partN == 0) {
-		for (int i = 0; i < BUFF_SIZE; i++) {
-			gCN.previousValue = gOutputBuffer[i] = wavetable[gCN.current_wav_i] =
-					((wavetable[gCN.current_wav_i] / 2) + (gCN.previousValue / 2));
-			gCN.current_wav_i++;
-			gCN.current_wav_i %= gCN.N;
-
-			gCN.currentNum++;
-			if (gCN.currentNum >= gCN.totalNum) {
-				gCN.newWaveTable = 1;
-			}
-		}
-	}
-
-	/*** Uzpildyti buferi ***/
-	for (int i = (partN ? BUFF_SIZE / 2 : 0); i < (partN ? BUFF_SIZE : BUFF_SIZE / 2); i++) {
-		OutputBuffer[(i * 2)] = OutputBuffer[(i * 2) + 1] = gOutputBuffer[i];
-	}
-}
 
 /* USER CODE END 4 */
 

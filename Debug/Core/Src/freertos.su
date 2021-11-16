@@ -1,0 +1,5 @@
+freertos.cpp:90:6:void MX_FREERTOS_Init()	8	static
+freertos.cpp:132:6:void StartDefaultTask(void*)	16	static
+freertos.cpp:159:6:void BSP_AUDIO_OUT_HalfTransfer_CallBack()	8	static
+freertos.cpp:164:6:void BSP_AUDIO_OUT_TransferComplete_CallBack()	8	static
+freertos.cpp:171:6:void fillBuffer(uint8_t)	32	static
