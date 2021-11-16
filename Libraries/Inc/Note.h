@@ -2,10 +2,15 @@
 #define NOTE_H_
 
 #include "main.h"
+#include <vector>
+
+#define randInRange(min, max) ((rand() % (int)(((max) + 1) - (min))) + (min))
 
 class Note {
 private:
+
 public:
+	std::vector<int> wavetable;
 	uint32_t currentNum = 0;
 	int32_t previousValue = 0;
 	uint32_t current_wav_i = 0;
@@ -13,7 +18,8 @@ public:
 	uint32_t N;
 	uint32_t totalNum;
 
-//	Note() = default;
+	void GetNextPart(float &destArray);
+
 	Note(uint32_t f, uint32_t t);
 	virtual ~Note() = default;
 };

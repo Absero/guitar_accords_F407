@@ -35,21 +35,14 @@
 /* Private typedef -----------------------------------------------------------*/
 typedef StaticTask_t osStaticThreadDef_t;
 /* USER CODE BEGIN PTD */
-typedef struct {
-	uint32_t N;
-	uint32_t totalNum;
-	uint32_t currentNum;
-	int32_t previousValue;
-	uint32_t current_wav_i;
-	uint8_t newWaveTable;
-} note_data_t;
 
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define NOTE_F 110
+#define TIMENOTE 3
 
-#define randInRange(min, max) ((rand() % (int)(((max) + 1) - (min))) + (min))
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -132,11 +125,7 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument) {
 	/* USER CODE BEGIN StartDefaultTask */
-
-#define NOTE_F 110
-#define TIMENOTE 3
 	gCN = new Note(NOTE_F, TIMENOTE);
-	gCN->reset = true;
 
 	if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_AUTO, 60, SAMPLING_FREQ) != AUDIO_OK) Error_Handler();
 
@@ -164,21 +153,17 @@ void BSP_AUDIO_OUT_TransferComplete_CallBack(void) {
 
 	fillBuffer(1);
 }
-int16_t wavetable[1000];
 
 void fillBuffer(uint8_t partN) {
 	if (gCN->reset) {
 		delete gCN;
 		gCN = new Note(NOTE_F, TIMENOTE);
-
-		for (uint32_t i = 0; i < gCN->N; i++)
-			wavetable[i] = (int16_t) randInRange(-30000, 30000);
 	}
 
 	if (partN == 0) {
 		for (int i = 0; i < BUFF_SIZE; i++) {
-			gCN->previousValue = gOutputBuffer[i] = wavetable[gCN->current_wav_i] =
-					((wavetable[gCN->current_wav_i] / 2) + (gCN->previousValue / 2));
+			gCN->previousValue = gOutputBuffer[i] = gCN->wavetable[gCN->current_wav_i] =
+					((gCN->wavetable[gCN->current_wav_i] / 2) + (gCN->previousValue / 2));
 			gCN->current_wav_i++;
 			gCN->current_wav_i %= gCN->N;
 
