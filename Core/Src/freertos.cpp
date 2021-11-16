@@ -26,13 +26,14 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <memory>
 #include "stm32f4_discovery_audio.h"
-#include <math.h>
-#include <stdlib.h>
-#include <time.h>
+
+#include "Note.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
+typedef StaticTask_t osStaticThreadDef_t;
 /* USER CODE BEGIN PTD */
 typedef struct {
 	uint32_t N;
@@ -47,10 +48,6 @@ typedef struct {
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define SAMPLING_FREQ 44100  //BSP_audio_out sampling frequency
-#define BUFF_SIZE  256/2
-#define BLOCKSIZE   32
-#define NUMBLOCKS    (BUFF_SIZE/BLOCKSIZE)
 
 #define randInRange(min, max) ((rand() % (int)(((max) + 1) - (min))) + (min))
 /* USER CODE END PD */
@@ -62,7 +59,7 @@ typedef struct {
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-note_data_t gCN;
+Note *gCN;
 
 static int16_t OutputBuffer[BUFF_SIZE * 2] = { 0 };  //Output, left+right channels
 static float gOutputBuffer[BUFF_SIZE] = { 0 };
@@ -70,8 +67,12 @@ static float gOutputBuffer[BUFF_SIZE] = { 0 };
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = { .name = "defaultTask", .stack_size = 128 * 4,
-		.priority = (osPriority_t) osPriorityNormal, };
+uint32_t defaultTaskBuffer[256];
+osStaticThreadDef_t defaultTaskControlBlock;
+const osThreadAttr_t defaultTask_attributes = { .name = "defaultTask", .cb_mem =
+		&defaultTaskControlBlock, .cb_size = sizeof(defaultTaskControlBlock), .stack_mem =
+		&defaultTaskBuffer[0], .stack_size = sizeof(defaultTaskBuffer), .priority =
+		(osPriority_t) osPriorityNormal, };
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -131,16 +132,13 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument) {
 	/* USER CODE BEGIN StartDefaultTask */
-	srand(time(NULL));
 
 #define NOTE_F 110
 #define TIMENOTE 3
-	gCN.N = (uint32_t) round(SAMPLING_FREQ / NOTE_F - 0.5);
-	gCN.currentNum = 0;
-	gCN.totalNum = SAMPLING_FREQ * TIMENOTE - (SAMPLING_FREQ * TIMENOTE) % BUFF_SIZE;
-	gCN.newWaveTable = 1;
+	gCN = new Note(NOTE_F, TIMENOTE);
+	gCN->reset = true;
 
-	if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_AUTO, 80, SAMPLING_FREQ) != AUDIO_OK) Error_Handler();
+	if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_AUTO, 60, SAMPLING_FREQ) != AUDIO_OK) Error_Handler();
 
 	fillBuffer(0);
 	fillBuffer(1);
@@ -169,26 +167,24 @@ void BSP_AUDIO_OUT_TransferComplete_CallBack(void) {
 int16_t wavetable[1000];
 
 void fillBuffer(uint8_t partN) {
-	if (gCN.newWaveTable == 1) {
-		gCN.newWaveTable = 0;
-		gCN.current_wav_i = 0;
-		gCN.previousValue = 0;
-		gCN.currentNum = 0;
+	if (gCN->reset) {
+		delete gCN;
+		gCN = new Note(NOTE_F, TIMENOTE);
 
-		for (uint32_t i = 0; i < gCN.N; i++)
+		for (uint32_t i = 0; i < gCN->N; i++)
 			wavetable[i] = (int16_t) randInRange(-30000, 30000);
 	}
 
 	if (partN == 0) {
 		for (int i = 0; i < BUFF_SIZE; i++) {
-			gCN.previousValue = gOutputBuffer[i] = wavetable[gCN.current_wav_i] =
-					((wavetable[gCN.current_wav_i] / 2) + (gCN.previousValue / 2));
-			gCN.current_wav_i++;
-			gCN.current_wav_i %= gCN.N;
+			gCN->previousValue = gOutputBuffer[i] = wavetable[gCN->current_wav_i] =
+					((wavetable[gCN->current_wav_i] / 2) + (gCN->previousValue / 2));
+			gCN->current_wav_i++;
+			gCN->current_wav_i %= gCN->N;
 
-			gCN.currentNum++;
-			if (gCN.currentNum >= gCN.totalNum) {
-				gCN.newWaveTable = 1;
+			gCN->currentNum++;
+			if (gCN->currentNum >= gCN->totalNum) {
+				gCN->reset = true;
 			}
 		}
 	}
