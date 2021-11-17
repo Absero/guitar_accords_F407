@@ -8,6 +8,17 @@ Note::Note(uint32_t f, uint32_t t) {
 		wavetable[i] = (int16_t) randInRange(-30000, 30000);
 }
 
-void Note::GetNextPart(float &destArray) {
+int32_t Note::GetNext() {
+	previousValue = wavetable[current_wav_i] =
+			((wavetable[current_wav_i] / 2) + (previousValue / 2));
+	current_wav_i++;
+	current_wav_i %= N;
+
+	currentNum++;
+	if (currentNum >= totalNum) {
+		reset = true;
+	}
+
+	return previousValue;
 }
 

@@ -52,8 +52,6 @@ typedef StaticTask_t osStaticThreadDef_t;
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-Note *gCN;
-
 static int16_t OutputBuffer[BUFF_SIZE * 2] = { 0 };  //Output, left+right channels
 static float gOutputBuffer[BUFF_SIZE] = { 0 };
 
@@ -123,14 +121,17 @@ void MX_FREERTOS_Init(void) {
  * @retval None
  */
 /* USER CODE END Header_StartDefaultTask */
+std::unique_ptr<Note> gCN;
+
 void StartDefaultTask(void *argument) {
 	/* USER CODE BEGIN StartDefaultTask */
-	gCN = new Note(NOTE_F, TIMENOTE);
+	gCN.reset(new Note(NOTE_F, TIMENOTE));
 
 	if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_AUTO, 60, SAMPLING_FREQ) != AUDIO_OK) Error_Handler();
 
 	fillBuffer(0);
 	fillBuffer(1);
+
 	BSP_AUDIO_OUT_Play((uint16_t*) OutputBuffer, BUFF_SIZE * 2);
 
 	/* Infinite loop */
@@ -155,24 +156,10 @@ void BSP_AUDIO_OUT_TransferComplete_CallBack(void) {
 }
 
 void fillBuffer(uint8_t partN) {
-	if (gCN->reset) {
-		delete gCN;
-		gCN = new Note(NOTE_F, TIMENOTE);
-	}
+	if (gCN->reset) gCN.reset(new Note(NOTE_F, TIMENOTE));
 
-	if (partN == 0) {
-		for (int i = 0; i < BUFF_SIZE; i++) {
-			gCN->previousValue = gOutputBuffer[i] = gCN->wavetable[gCN->current_wav_i] =
-					((gCN->wavetable[gCN->current_wav_i] / 2) + (gCN->previousValue / 2));
-			gCN->current_wav_i++;
-			gCN->current_wav_i %= gCN->N;
-
-			gCN->currentNum++;
-			if (gCN->currentNum >= gCN->totalNum) {
-				gCN->reset = true;
-			}
-		}
-	}
+	if (partN == 0) for (int i = 0; i < BUFF_SIZE; i++)
+		gOutputBuffer[i] = gCN->GetNext();
 
 	/*** Uzpildyti buferi ***/
 	for (int i = (partN ? BUFF_SIZE / 2 : 0); i < (partN ? BUFF_SIZE : BUFF_SIZE / 2); i++) {
