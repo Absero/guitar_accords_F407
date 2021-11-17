@@ -1,6 +1,7 @@
 #include "Note.h"
 
-Note::Note(uint32_t f, uint32_t t) {
+Note::Note(uint32_t f, uint32_t t, float delayN) {
+	this->delayN = delayN;
 	N = (uint32_t) round(SAMPLING_FREQ / f - 0.5);
 	totalNum = t * SAMPLING_FREQ;
 	wavetable.resize(N);
@@ -9,16 +10,39 @@ Note::Note(uint32_t f, uint32_t t) {
 }
 
 int32_t Note::GetNext() {
+	if (delayCounter < delayN) {
+		delayCounter++;
+		return 0;
+	}
+
 	previousValue = wavetable[current_wav_i] =
 			((wavetable[current_wav_i] / 2) + (previousValue / 2));
 	current_wav_i++;
 	current_wav_i %= N;
 
 	currentNum++;
-	if (currentNum >= totalNum) {
-		reset = true;
-	}
+	if (currentNum >= totalNum) reset = true;
 
 	return previousValue;
 }
 
+float noteDelay = 0.01;
+Accord::Accord(std::vector<float> freqs, float time, float delay) {
+	uint32_t noteDelayN = (uint32_t) round(SAMPLING_FREQ * delay);
+	uint32_t currentDelay = 0;
+	for (float f : freqs) {
+		noteList.push_back(std::make_unique<Note>(f, time, currentDelay));
+		currentDelay += noteDelayN;
+	}
+}
+
+int32_t Accord::GetNext() {
+	int32_t value = 0;
+	for (const std::unique_ptr<Note> &note : noteList) {
+		value += note->GetNext() / noteList.size();
+
+		if (note->reset) reset = note->reset; //TODO: skaiciuot akorde, ne natoj
+	}
+
+	return value;
+}

@@ -121,11 +121,13 @@ void MX_FREERTOS_Init(void) {
  * @retval None
  */
 /* USER CODE END Header_StartDefaultTask */
-std::unique_ptr<Note> gCN;
+//std::unique_ptr<Note> gCN;
+std::unique_ptr<Accord> gAccord;
 
 void StartDefaultTask(void *argument) {
 	/* USER CODE BEGIN StartDefaultTask */
-	gCN.reset(new Note(NOTE_F, TIMENOTE));
+//	gCN.reset(new Note(NOTE_F, TIMENOTE));
+	gAccord.reset(new Accord( { 110 }, TIMENOTE, 0));
 
 	if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_AUTO, 60, SAMPLING_FREQ) != AUDIO_OK) Error_Handler();
 
@@ -156,10 +158,11 @@ void BSP_AUDIO_OUT_TransferComplete_CallBack(void) {
 }
 
 void fillBuffer(uint8_t partN) {
-	if (gCN->reset) gCN.reset(new Note(NOTE_F, TIMENOTE));
+//	if (gCN->reset) gCN.reset(new Note(NOTE_F, TIMENOTE));
+	if (gAccord->reset) gAccord.reset(new Accord( { 110 }, TIMENOTE, 0));
 
 	if (partN == 0) for (int i = 0; i < BUFF_SIZE; i++)
-		gOutputBuffer[i] = gCN->GetNext();
+		gOutputBuffer[i] = gAccord->GetNext();
 
 	/*** Uzpildyti buferi ***/
 	for (int i = (partN ? BUFF_SIZE / 2 : 0); i < (partN ? BUFF_SIZE : BUFF_SIZE / 2); i++) {
