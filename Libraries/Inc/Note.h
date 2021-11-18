@@ -28,7 +28,7 @@ public:
 
 class Accord {
 private:
-	std::vector<std::unique_ptr<Note>> noteList;
+	std::vector<Note> noteList;
 public:
 	bool reset = false;
 

@@ -31,17 +31,19 @@ Accord::Accord(std::vector<float> freqs, float time, float delay) {
 	uint32_t noteDelayN = (uint32_t) round(SAMPLING_FREQ * delay);
 	uint32_t currentDelay = 0;
 	for (float f : freqs) {
-		noteList.push_back(std::make_unique<Note>(f, time, currentDelay));
+		Note *n = new Note(f, time, currentDelay);
+		noteList.push_back(*n);
 		currentDelay += noteDelayN;
 	}
 }
 
 int32_t Accord::GetNext() {
 	int32_t value = 0;
-	for (const std::unique_ptr<Note> &note : noteList) {
-		value += note->GetNext() / noteList.size();
+	for (Note &note : noteList) {
+		value += (note.GetNext() / (float) noteList.size());
 
-		if (note->reset) reset = note->reset; //TODO: skaiciuot akorde, ne natoj
+		if (note.reset) reset = note.reset; //TODO: skaiciuot akorde, ne natoj
+
 	}
 
 	return value;
