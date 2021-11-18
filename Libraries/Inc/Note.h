@@ -10,11 +10,9 @@
 class Note {
 private:
 	std::vector<int> wavetable;
-	uint32_t currentNum = 0;
 	int32_t previousValue = 0;
 	uint32_t current_wav_i = 0;
 	uint32_t N;
-	uint32_t totalNum;
 	uint32_t delayN = 0;
 	uint32_t delayCounter = 0;
 
@@ -23,11 +21,13 @@ public:
 
 	int32_t GetNext();
 
-	Note(uint32_t f, uint32_t t, float delayN = 0);
+	Note(uint32_t f, float delayN = 0);
 };
 
 class Accord {
 private:
+	uint32_t currentNum = 0;
+	uint32_t totalNum;
 	std::vector<Note> noteList;
 public:
 	bool reset = false;
