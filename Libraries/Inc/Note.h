@@ -7,33 +7,27 @@
 
 #define randInRange(min, max) ((rand() % (int)(((max) + 1) - (min))) + (min))
 
-class Note {
-private:
-	std::vector<int> wavetable;
-	int32_t previousValue = 0;
-	uint32_t current_wav_i = 0;
-	uint32_t N;
-	uint32_t delayN = 0;
-	uint32_t delayCounter = 0;
-
-public:
-	bool reset = false;
-
-	int32_t GetNext();
-
-	Note(uint32_t f, float delayN = 0);
-};
-
 class Accord {
 private:
+	class Note {
+	private:
+		std::vector<float> wavetable;
+		int32_t previousValue = 0;
+		uint32_t N, current_wav_i = 0, delayN = 0, delayCounter = 0;
+
+	public:
+		float GetNext();
+		Note(uint32_t f, float delayN = 0);
+	};
+
 	uint32_t currentNum = 0;
 	uint32_t totalNum;
-	std::vector<Note> noteList;
+	std::vector<std::unique_ptr<Note>> noteList;
 public:
 	bool reset = false;
 
 	Accord(std::vector<float> freqs, float time, float delay = 0.01);
-	int32_t GetNext();
+	float GetNext();
 
 };
 

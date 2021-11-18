@@ -52,8 +52,8 @@ typedef StaticTask_t osStaticThreadDef_t;
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-static int16_t OutputBuffer[BUFF_SIZE * 2] = { 0 };  //Output, left+right channels
-static float gOutputBuffer[BUFF_SIZE] = { 0 };
+int16_t OutputBuffer[BUFF_SIZE * 2] = { 0 };  //Output, left+right channels
+int16_t gOutputBuffer[BUFF_SIZE] = { 0 };
 
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
@@ -123,12 +123,12 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE END Header_StartDefaultTask */
 
 std::unique_ptr<Accord> gAccord;
-#define newaccord new Accord( { 80, 110, 220 }, TIMENOTE, 0.05)
+#define newaccord new Accord( { 400, 600, 800}, TIMENOTE, 0.05)
 void StartDefaultTask(void *argument) {
 	/* USER CODE BEGIN StartDefaultTask */
 	gAccord.reset(newaccord);
 
-	if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_AUTO, 60, SAMPLING_FREQ) != AUDIO_OK) Error_Handler();
+	if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_AUTO, 70, SAMPLING_FREQ) != AUDIO_OK) Error_Handler();
 
 	fillBuffer(0);
 	fillBuffer(1);
@@ -160,7 +160,7 @@ void fillBuffer(uint8_t partN) {
 	if (gAccord->reset) gAccord.reset(newaccord);
 
 	if (partN == 0) for (int i = 0; i < BUFF_SIZE; i++)
-		gOutputBuffer[i] = gAccord->GetNext();
+		gOutputBuffer[i] = (int16_t) gAccord->GetNext();
 
 	/*** Uzpildyti buferi ***/
 	for (int i = (partN ? BUFF_SIZE / 2 : 0); i < (partN ? BUFF_SIZE : BUFF_SIZE / 2); i++) {
