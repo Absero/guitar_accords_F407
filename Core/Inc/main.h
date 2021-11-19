@@ -126,10 +126,10 @@ void Error_Handler(void);
 #define MEMS_INT2_Pin GPIO_PIN_1
 #define MEMS_INT2_GPIO_Port GPIOE
 /* USER CODE BEGIN Private defines */
+
 #define SAMPLING_FREQ 44100
 #define BUFF_SIZE  256
-#define BLOCKSIZE   32
-#define NUMBLOCKS    (BUFF_SIZE/BLOCKSIZE)
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

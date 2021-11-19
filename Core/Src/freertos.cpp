@@ -123,7 +123,9 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE END Header_StartDefaultTask */
 
 std::unique_ptr<Accord> gAccord;
-#define newaccord new Accord( { 400, 600, 800}, TIMENOTE, 0.05)
+//std::unique_ptr<Accord> gAccord __attribute__((section(".ccmram")));
+
+#define newaccord new Accord( {110, 220, 330}, TIMENOTE, 0.03)
 void StartDefaultTask(void *argument) {
 	/* USER CODE BEGIN StartDefaultTask */
 	gAccord.reset(newaccord);

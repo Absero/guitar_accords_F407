@@ -11,9 +11,9 @@ class Accord {
 private:
 	class Note {
 	private:
-		std::vector<float> wavetable;
+		std::vector<int16_t> wavetable;
 		int32_t previousValue = 0;
-		uint32_t N, current_wav_i = 0, delayN = 0, delayCounter = 0;
+		uint16_t N, current_wav_i = 0, delayN = 0, delayCounter = 0;
 
 	public:
 		float GetNext();
