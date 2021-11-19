@@ -40,8 +40,6 @@ typedef StaticTask_t osStaticThreadDef_t;
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define NOTE_F 110
-#define TIMENOTE 3
 
 /* USER CODE END PD */
 
@@ -52,8 +50,7 @@ typedef StaticTask_t osStaticThreadDef_t;
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-int16_t OutputBuffer[BUFF_SIZE * 2] = { 0 };  //Output, left+right channels
-int16_t gOutputBuffer[BUFF_SIZE] = { 0 };
+int16_t OutputBuffer[BUFF_SIZE * 2] = { 0 };
 
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
@@ -125,7 +122,7 @@ void MX_FREERTOS_Init(void) {
 std::unique_ptr<Accord> gAccord;
 //std::unique_ptr<Accord> gAccord __attribute__((section(".ccmram")));
 
-#define newaccord new Accord( {110, 220, 330}, TIMENOTE, 0.03)
+#define newaccord new Accord( {110, 220, 330, 440, 550, 660, 770}, 3, 0.01)
 void StartDefaultTask(void *argument) {
 	/* USER CODE BEGIN StartDefaultTask */
 	gAccord.reset(newaccord);
@@ -161,13 +158,10 @@ void BSP_AUDIO_OUT_TransferComplete_CallBack(void) {
 void fillBuffer(uint8_t partN) {
 	if (gAccord->reset) gAccord.reset(newaccord);
 
-	if (partN == 0) for (int i = 0; i < BUFF_SIZE; i++)
-		gOutputBuffer[i] = (int16_t) gAccord->GetNext();
-
 	/*** Uzpildyti buferi ***/
 	for (int i = (partN ? BUFF_SIZE / 2 : 0); i < (partN ? BUFF_SIZE : BUFF_SIZE / 2); i++) {
-		OutputBuffer[(i * 2)] = OutputBuffer[(i * 2) + 1] = gOutputBuffer[i];
-	}
+		OutputBuffer[(i * 2)] = OutputBuffer[(i * 2) + 1] = (int16_t) gAccord->GetNext();
+	}  //todo ar galima sita iskart visa supildyt? gal memcpy
 }
 /* USER CODE END Application */
 
