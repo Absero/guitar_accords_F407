@@ -14,10 +14,8 @@ float Accord::Note::GetNext() {
 		return 0;
 	}
 
-	previousValue = wavetable[current_wav_i] =
-			((wavetable[current_wav_i] / 2) + (previousValue / 2));
-	current_wav_i++;
-	current_wav_i %= N;
+	previousValue = wavetable[current_wav_i] = (wavetable[current_wav_i] + previousValue) / 2;
+	current_wav_i = (current_wav_i + 1) % N;
 
 	return previousValue;
 }
@@ -37,10 +35,7 @@ float Accord::GetNext() {
 	for (uint8_t i = 0; i < noteList.size(); i++)
 		value += noteList[i]->GetNext();
 
-	value /= noteList.size();
+	if (++currentNum >= totalNum) reset = true;
 
-	currentNum++;
-	if (currentNum >= totalNum) reset = true;
-
-	return value;
+	return value / noteList.size();
 }
