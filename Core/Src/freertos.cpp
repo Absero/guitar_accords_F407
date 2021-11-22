@@ -28,12 +28,14 @@
 /* USER CODE BEGIN Includes */
 #include <memory>
 #include "stm32f4_discovery_audio.h"
+#include "AccordTask.h"
 
 #include "Note.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 typedef StaticTask_t osStaticThreadDef_t;
+typedef StaticQueue_t osStaticMessageQDef_t;
 /* USER CODE BEGIN PTD */
 
 /* USER CODE END PTD */
@@ -52,6 +54,9 @@ typedef StaticTask_t osStaticThreadDef_t;
 /* USER CODE BEGIN Variables */
 int16_t OutputBuffer[BUFF_SIZE * 2] = { 0 };
 
+#define newaccord new Accord( {110, 220, 330, 440, 550, 660, 770}, 3, 0.01)
+std::unique_ptr<Accord> gAccord;
+
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
@@ -61,6 +66,21 @@ const osThreadAttr_t defaultTask_attributes = { .name = "defaultTask", .cb_mem =
 		&defaultTaskControlBlock, .cb_size = sizeof(defaultTaskControlBlock), .stack_mem =
 		&defaultTaskBuffer[0], .stack_size = sizeof(defaultTaskBuffer), .priority =
 		(osPriority_t) osPriorityNormal, };
+/* Definitions for AccordTask */
+osThreadId_t AccordTaskHandle;
+uint32_t taskAccordBuffer[256];
+osStaticThreadDef_t taskAccordControlBlock;
+const osThreadAttr_t AccordTask_attributes = { .name = "AccordTask", .cb_mem =
+		&taskAccordControlBlock, .cb_size = sizeof(taskAccordControlBlock), .stack_mem =
+		&taskAccordBuffer[0], .stack_size = sizeof(taskAccordBuffer), .priority =
+		(osPriority_t) osPriorityRealtime, };
+/* Definitions for qAccordSTR */
+osMessageQueueId_t qAccordSTRHandle;
+uint8_t qAccordBuffer[5 * sizeof(uint16_t)];
+osStaticMessageQDef_t qAccordControlBlock;
+const osMessageQueueAttr_t qAccordSTR_attributes = { .name = "qAccordSTR", .cb_mem =
+		&qAccordControlBlock, .cb_size = sizeof(qAccordControlBlock), .mq_mem = &qAccordBuffer,
+		.mq_size = sizeof(qAccordBuffer) };
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -68,6 +88,7 @@ void fillBuffer(uint8_t partN);
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
+extern void StartAccordTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -93,6 +114,10 @@ void MX_FREERTOS_Init(void) {
 	/* start timers, add new ones, ... */
 	/* USER CODE END RTOS_TIMERS */
 
+	/* Create the queue(s) */
+	/* creation of qAccordSTR */
+	qAccordSTRHandle = osMessageQueueNew(5, sizeof(uint16_t), &qAccordSTR_attributes);
+
 	/* USER CODE BEGIN RTOS_QUEUES */
 	/* add queues, ... */
 	/* USER CODE END RTOS_QUEUES */
@@ -100,6 +125,9 @@ void MX_FREERTOS_Init(void) {
 	/* Create the thread(s) */
 	/* creation of defaultTask */
 	defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+
+	/* creation of AccordTask */
+	AccordTaskHandle = osThreadNew(StartAccordTask, NULL, &AccordTask_attributes);
 
 	/* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
@@ -118,16 +146,11 @@ void MX_FREERTOS_Init(void) {
  * @retval None
  */
 /* USER CODE END Header_StartDefaultTask */
-
-std::unique_ptr<Accord> gAccord;
-//std::unique_ptr<Accord> gAccord __attribute__((section(".ccmram")));
-
-#define newaccord new Accord( {110, 220, 330, 440, 550, 660, 770}, 3, 0.01)
 void StartDefaultTask(void *argument) {
 	/* USER CODE BEGIN StartDefaultTask */
 	gAccord.reset(newaccord);
 
-	if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_AUTO, 70, SAMPLING_FREQ) != AUDIO_OK) Error_Handler();
+	if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_AUTO, 90, SAMPLING_FREQ) != AUDIO_OK) Error_Handler();
 
 	fillBuffer(0);
 	fillBuffer(1);
@@ -136,7 +159,6 @@ void StartDefaultTask(void *argument) {
 
 	/* Infinite loop */
 	for (;;) {
-		HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
 		osDelay(1000);
 	}
 	/* USER CODE END StartDefaultTask */
@@ -161,7 +183,7 @@ void fillBuffer(uint8_t partN) {
 	/*** Uzpildyti buferi ***/
 	for (int i = (partN ? BUFF_SIZE / 2 : 0); i < (partN ? BUFF_SIZE : BUFF_SIZE / 2); i++) {
 		OutputBuffer[(i * 2)] = OutputBuffer[(i * 2) + 1] = (int16_t) gAccord->GetNext();
-	}  //todo ar galima sita iskart visa supildyt? gal memcpy
+	}
 }
 /* USER CODE END Application */
 
