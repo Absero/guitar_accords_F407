@@ -130,6 +130,8 @@ void Error_Handler(void);
 #define SAMPLING_FREQ 44100
 #define BUFF_SIZE  256
 
+extern int16_t gAudioBuffer[BUFF_SIZE * 2];
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

@@ -1,4 +1,4 @@
-#include "Note.h"
+#include "Accord.h"
 
 Accord::Note::Note(uint32_t f, float delayN) {
 	this->delayN = delayN;

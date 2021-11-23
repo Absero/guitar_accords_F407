@@ -19,18 +19,14 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
+#include <main.h>
 #include "FreeRTOS.h"
 #include "task.h"
-#include "main.h"
 #include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <memory>
-#include "stm32f4_discovery_audio.h"
 #include "AccordTask.h"
-
-#include "Note.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,10 +48,7 @@ typedef StaticQueue_t osStaticMessageQDef_t;
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-int16_t OutputBuffer[BUFF_SIZE * 2] = { 0 };
-
-#define newaccord new Accord( {110, 220, 330, 440, 550, 660, 770}, 3, 0.01)
-std::unique_ptr<Accord> gAccord;
+int16_t gAudioBuffer[BUFF_SIZE * 2] = { 0 };
 
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
@@ -84,7 +77,7 @@ const osMessageQueueAttr_t qAccordSTR_attributes = { .name = "qAccordSTR", .cb_m
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
-void fillBuffer(uint8_t partN);
+
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
@@ -148,48 +141,17 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument) {
 	/* USER CODE BEGIN StartDefaultTask */
-	gAccord.reset(newaccord);
-
-	if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_AUTO, 70, SAMPLING_FREQ) != AUDIO_OK) Error_Handler();
-
-	fillBuffer(0);
-	fillBuffer(1);
-
-	BSP_AUDIO_OUT_Play((uint16_t*) OutputBuffer, BUFF_SIZE * 2);
-
 	/* Infinite loop */
 	for (;;) {
 		osDelay(1000);
+		HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
 	}
 	/* USER CODE END StartDefaultTask */
 }
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
-void BSP_AUDIO_OUT_HalfTransfer_CallBack(void) {
-	fillBuffer(0);
-}
 
-/*** Back to Buffer beginning ***/
-void BSP_AUDIO_OUT_TransferComplete_CallBack(void) {
-	BSP_AUDIO_OUT_ChangeBuffer((uint16_t*) OutputBuffer, BUFF_SIZE * 2);
-
-	fillBuffer(1);
-}
-
-void fillBuffer(uint8_t partN) {
-	if (gAccord->reset) {
-		gAccord.reset(newaccord);
-		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-		vTaskNotifyGiveFromISR((TaskHandle_t) AccordTaskHandle, &xHigherPriorityTaskWoken);
-		portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-	}
-
-	/*** Uzpildyti buferi ***/
-	for (int i = (partN ? BUFF_SIZE / 2 : 0); i < (partN ? BUFF_SIZE : BUFF_SIZE / 2); i++) {
-		OutputBuffer[(i * 2)] = OutputBuffer[(i * 2) + 1] = (int16_t) gAccord->GetNext();
-	}
-}
 /* USER CODE END Application */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
