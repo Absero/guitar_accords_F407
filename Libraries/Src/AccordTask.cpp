@@ -5,7 +5,7 @@
 void StartAccordTask(void *argument) {
 
 	for (;;) {
+		ulTaskNotifyTake( pdTRUE, portMAX_DELAY);
 		HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-		osDelay(1000);
 	}
 }

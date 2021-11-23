@@ -150,7 +150,7 @@ void StartDefaultTask(void *argument) {
 	/* USER CODE BEGIN StartDefaultTask */
 	gAccord.reset(newaccord);
 
-	if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_AUTO, 90, SAMPLING_FREQ) != AUDIO_OK) Error_Handler();
+	if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_AUTO, 70, SAMPLING_FREQ) != AUDIO_OK) Error_Handler();
 
 	fillBuffer(0);
 	fillBuffer(1);
@@ -178,7 +178,12 @@ void BSP_AUDIO_OUT_TransferComplete_CallBack(void) {
 }
 
 void fillBuffer(uint8_t partN) {
-	if (gAccord->reset) gAccord.reset(newaccord);
+	if (gAccord->reset) {
+		gAccord.reset(newaccord);
+		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+		vTaskNotifyGiveFromISR((TaskHandle_t) AccordTaskHandle, &xHigherPriorityTaskWoken);
+		portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+	}
 
 	/*** Uzpildyti buferi ***/
 	for (int i = (partN ? BUFF_SIZE / 2 : 0); i < (partN ? BUFF_SIZE : BUFF_SIZE / 2); i++) {
