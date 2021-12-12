@@ -16,7 +16,7 @@ void fillBuffer(uint8_t part);
 
 void StartAccordTask(void *argument) {
 	uint8_t partN = 0;
-	if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_AUTO, 70, SAMPLING_FREQ) != AUDIO_OK) Error_Handler();
+	if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_AUTO, 90, SAMPLING_FREQ) != AUDIO_OK) Error_Handler();
 
 	gCurrentAccord.reset(new Accord( { 0 }, 1, 0));
 

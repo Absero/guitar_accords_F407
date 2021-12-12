@@ -9,8 +9,8 @@
 #include <cstring>
 #include "queue.h"
 
-#define BPM 104*2
-const float T_STEP = 0.3;
+#define BPM 112*2
+const float T_STEP = 1.0 / (BPM / 60.0);
 
 QueueHandle_t chordQueue;
 // @formatter:off
@@ -28,40 +28,34 @@ QueueHandle_t chordQueue;
 //		{"0",2}
 //};
 
-// https://tabs.ultimate-guitar.com/tab/imagine-dragons/demons-chords-1148110
-//#define STRUM(x) {x, T_STEP},{x, T_STEP},{x, T_STEP},{x, T_STEP},{x, T_STEP},{x, T_STEP},{x, T_STEP},{x, T_STEP}
+// https://tabs.ultimate-guitar.com/tab/misc-christmas/jingle-bells-chords-273336
+//#define STRUM(x) {x, T_STEP}, {x, T_STEP*0.5}, {x, T_STEP*1.5}
+//#define STRUM2(x) STRUM(x),STRUM(x)
 //accordInfoString_t gAccordSequence[] = {
-//		STRUM("D"),
-//		STRUM("A"),
-//		STRUM("2Bm"),
-//		STRUM("G"),
-//		STRUM("D"),
-//		STRUM("A"),
-//		STRUM("2Bm"),
-//		STRUM("G"),
-//		STRUM("D"),
-//		{"A", T_STEP},{"A", T_STEP},{"A", T_STEP},{"A", T_STEP},{"A", T_STEP},{"A", T_STEP},{"A", T_STEP},{"Bm", T_STEP},
-//		STRUM("2Bm"),
-//		STRUM("G"),
-//		STRUM("D"),
-//		{"A", T_STEP},{"A", T_STEP},{"A", T_STEP},{"A", T_STEP},{"A", T_STEP},{"A", T_STEP},{"A", T_STEP},{"Bm", T_STEP},
-//		STRUM("2Bm"),
-//		STRUM("G"),
+//		STRUM2("G"),STRUM("C"),STRUM("G"),
+//		STRUM("C"),STRUM("G"),
+//		STRUM("A7"),STRUM("D7"),
+//		STRUM2("G"),STRUM("C"),STRUM("G"),
+//		STRUM("C"),STRUM("G"),
+//		STRUM("D7"),STRUM("G"),
 //		{"0",2}
 //};
 
-#define STRUM(x) {x, T_STEP}, {x, T_STEP*0.5}, {x, T_STEP*1.5}
-#define STRUM2(x) STRUM(x),STRUM(x)
+// https://tabs.ultimate-guitar.com/tab/rihanna/stay-chords-1195964
+#define STRUM(x1,x2,x3,x4) {x1, T_STEP*2}, {x2, T_STEP*2}, {x3, T_STEP*2}, {x4, T_STEP*2}
 accordInfoString_t gAccordSequence[] = {
-		STRUM2("3G"),STRUM("3G"),STRUM("3C"),STRUM("3G"),
-		STRUM("3C"),STRUM("3G"),
-		STRUM("3A7"),STRUM("3D7"),
-		STRUM2("3G"),STRUM("3G"),STRUM("3C"),STRUM("3G"),
-		STRUM("3C"),STRUM("3G"),
-		STRUM("3D7"),STRUM("3G"),
-		{"0",2}
+		STRUM("C","C","C","Dm"),	STRUM("Am","Am","Am","Am7"),STRUM("Am","Am","Am","Am7"),STRUM("Am","Am","Am","Am7"),
+		STRUM("C","C","C","Dm"),	STRUM("Am","Am","Am","Am7"),STRUM("Am","Am","Am","Am7"),STRUM("Am","Am","Am","Am7"),
+		STRUM("C","C","C","Dm"),	STRUM("Am","Am","Am","Am7"),STRUM("Am","Am","Am","Am7"),STRUM("Am","Am","Am","Am7"),
+		STRUM("C","C","C","Dm"),	STRUM("Am","Am","Am","Am7"),STRUM("Am","Am","Am","Am7"),STRUM("Am","Am","Am","Am7"),
+		STRUM("F","F","F","Dm"),	STRUM("Dm","Dm","Dm","Am"),	STRUM("Am","Am","Am","Am"),	STRUM("Am","Am","Am","F"),
+		STRUM("F","F","F","Dm"),	STRUM("Dm","Dm","Dm","G"),	STRUM("G","G","G","G"),		STRUM("G","G","G","C"),
+		STRUM("C","C","C","Dm"),	STRUM("Dm","Dm","Dm","Am"),	STRUM("Am","Am","Am","F"),	STRUM("F","F","F","C"),
+		STRUM("C","C","C","Dm"),	STRUM("Dm","Dm","Dm","Am"),	STRUM("Am","Am","Am","F"),	STRUM("F","F","F","C"),
+		STRUM("Am","Am","Am","F"),	STRUM("F","F","F","C"),		STRUM("C","C","C","Dm"),	STRUM("Am","Am","Am","Am7"),
+		STRUM("Am","Am","Am","Am7"),STRUM("Am","Am","Am","Am7"),STRUM("G","G","G","G"),		STRUM("G","G","G","C"),
+		{"0", 2}
 };
-
 // @formatter:on
 
 void StartDefaultTask(void *argument) {
@@ -73,7 +67,7 @@ void StartDefaultTask(void *argument) {
 	for (;;) {
 		strcpy(accI.chord, gAccordSequence[indexas].chord.c_str());
 		accI.time = gAccordSequence[indexas].time;
-		accI.delay = 0.01;
+		accI.delay = 0.005;
 		xQueueSend(chordQueue, (void* ) &accI, portMAX_DELAY);
 		HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
 		indexas = (indexas + 1) % (sizeof(gAccordSequence) / sizeof(accordInfoString_t));
