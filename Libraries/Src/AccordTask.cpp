@@ -26,10 +26,10 @@ void StartAccordTask(void *argument) {
 	BSP_AUDIO_OUT_Play((uint16_t*) gAudioBuffer, BUFF_SIZE * 2);
 
 	for (;;) {
-		fillBuffer(partN);
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
 		if (partN == 1) BSP_AUDIO_OUT_ChangeBuffer((uint16_t*) gAudioBuffer, BUFF_SIZE * 2);
+		fillBuffer(partN);
 
 		partN ^= 1;
 	}
