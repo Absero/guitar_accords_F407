@@ -42,7 +42,7 @@ public:
 	float GetNext();
 
 };
-// vienas fret padidina per +5,945880354%
+// one fret increases freq by +5,945880354%
 // @formatter:off
 static std::map<std::string, std::vector<float>> CHORD = {
 		{ "G", { 98, 123, 147, 196, 247, 392} },
