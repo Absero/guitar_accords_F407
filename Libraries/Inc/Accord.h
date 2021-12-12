@@ -9,8 +9,9 @@
 #define randInRange(min, max) ((rand() % (int)(((max) + 1) - (min))) + (min))
 
 typedef struct {
-	char chord[4];
+	char chord[10];
 	float time;
+	float delay;
 } accordInfo_t;
 
 class Accord {
@@ -60,6 +61,6 @@ static std::map<std::string, std::vector<float>> CHORD = {
 		{ "G7", {98, 123, 147, 196, 247, 349} },
 		{ "A7", {110, 165, 196, 277, 329} },
 		{ "B7", {123, 156, 220, 247, 370} },
-		{ "0", {}}};
+		{ "0", {0}}};
 // @formatter:on
 #endif /* NOTE_H_ */

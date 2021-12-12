@@ -28,6 +28,7 @@
 /* USER CODE BEGIN Includes */
 #include "AccordTask.h"
 #include "queue.h"
+#include <cstring>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -113,7 +114,7 @@ void MX_FREERTOS_Init(void) {
 	qAccordSTRHandle = osMessageQueueNew(5, sizeof(uint16_t), &qAccordSTR_attributes);
 
 	/* USER CODE BEGIN RTOS_QUEUES */
-	chordQueue = xQueueCreate(10, sizeof(accordInfo_t)); //length, item size
+	chordQueue = xQueueCreate(3, sizeof(accordInfo_t)); //length, item size
 	/* USER CODE END RTOS_QUEUES */
 
 	/* Create the thread(s) */
@@ -142,11 +143,18 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument) {
 	/* USER CODE BEGIN StartDefaultTask */
+	accordInfo_t accI;
+	std::vector<std::string> c = { "Cm", "C", "D", "E" };
+	uint8_t indexas = 0;
 	/* Infinite loop */
 	for (;;) {
-		accordInfo_t accI;
+
+		strcpy(accI.chord, c[indexas].c_str());
+		accI.time = 1;
+		accI.delay = 0.01;
 		xQueueSend(chordQueue, (void* ) &accI, portMAX_DELAY);
 		HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+		indexas = (indexas + 1) % c.size();
 	}
 	/* USER CODE END StartDefaultTask */
 }

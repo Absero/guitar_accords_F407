@@ -12,9 +12,6 @@ int16_t gAudioBuffer[BUFF_SIZE * 2] = { 0 };
 static std::unique_ptr<Accord> gCurrentAccord;
 extern QueueHandle_t chordQueue;
 
-static uint16_t position = 0;
-static std::vector<std::string> gChords = { "C", "D", "E", "F", "G", "A" };
-
 void fillBuffer(uint8_t part);
 
 void StartAccordTask(void *argument) {
@@ -41,10 +38,10 @@ void StartAccordTask(void *argument) {
 void fillBuffer(uint8_t part) {
 	if (gCurrentAccord->reset) {
 		accordInfo_t newAccord;
-//		TODO paimt is eiles struktura
 		if (xQueueReceive(chordQueue, (void*) &newAccord, portMAX_DELAY)) {
-			gCurrentAccord.reset(new Accord(CHORD[gChords[position]], 1, 0.01));
-			position = position + 1 >= (uint16_t) gChords.size() ? 0 : position + 1;
+			gCurrentAccord.reset(new Accord(CHORD[newAccord.chord],
+				newAccord.time,
+				newAccord.delay));
 		}
 	}
 
