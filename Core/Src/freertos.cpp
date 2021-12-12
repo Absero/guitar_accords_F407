@@ -51,6 +51,8 @@ typedef StaticQueue_t osStaticMessageQDef_t;
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
 QueueHandle_t chordQueue;
+std::vector<accordInfoString_t> gAccordSequence = { { "G", 1 }, { "D7", 2 }, { "Am7", 1 },
+		{ "D7", 2 } };
 
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
@@ -144,17 +146,16 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void *argument) {
 	/* USER CODE BEGIN StartDefaultTask */
 	accordInfo_t accI;
-	std::vector<std::string> c = { "Cm", "C", "D", "E" };
 	uint8_t indexas = 0;
 	/* Infinite loop */
 	for (;;) {
 
-		strcpy(accI.chord, c[indexas].c_str());
+		strcpy(accI.chord, gAccordSequence[indexas].chord.c_str());
 		accI.time = 1;
-		accI.delay = 0.01;
+		accI.delay = 0.02;
 		xQueueSend(chordQueue, (void* ) &accI, portMAX_DELAY);
 		HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-		indexas = (indexas + 1) % c.size();
+		indexas = (indexas + 1) % gAccordSequence.size();
 	}
 	/* USER CODE END StartDefaultTask */
 }
