@@ -9,24 +9,24 @@
 #include <cstring>
 #include "queue.h"
 
-#define BPM 141*2
-const float T_STEP = 1.0 / (BPM / 60.0);
+#define BPM 104*2
+const float T_STEP = 0.3;
 
 QueueHandle_t chordQueue;
 // @formatter:off
 
 // https://tabs.ultimate-guitar.com/tab/brenda-lee/rockin-around-the-christmas-tree-chords-991152
-#define STRUM(x) {x, T_STEP*3}, {x, T_STEP*2}, {x, T_STEP}
-accordInfoString_t gAccordSequence[] = {
-		STRUM("1G"),	STRUM("1Em"),	STRUM("1C"),	STRUM("1D"),
-		STRUM("1G"),	STRUM("1G"),	STRUM("1G"), 	STRUM("1G"), 	STRUM("1D7"), 	STRUM("1D7"), 	STRUM("1D7"), 	STRUM("1D7"),
-		STRUM("1Am7"),	STRUM("1D7"), 	STRUM("1Am7"), 	STRUM("1D7"), 	STRUM("1Am7"), 	STRUM("1D7"), 	STRUM("1G"), 	STRUM("1G"),
-		STRUM("1G"),	STRUM("1G"), 	STRUM("1G"), 	STRUM("1G"), 	STRUM("1D7"), 	STRUM("1D7"), 	STRUM("1D7"), 	STRUM("1D7"),
-		STRUM("1Am7"),	STRUM("1D7"), 	STRUM("1Am7"), 	STRUM("1D7"), 	STRUM("1Am7"), 	STRUM("1D7"), 	STRUM("1G"), 	STRUM("1G"),
-		STRUM("1C"),	STRUM("1C"), 	STRUM("1C"), 	STRUM("1C"), 	STRUM("2Bm"), 	STRUM("2Bm"), 	STRUM("2Bm"), 	STRUM("2Bm"),
-		STRUM("1Am"),	STRUM("1Emmaj7"), STRUM("1Em7"), STRUM("1Em7"), STRUM("1A7"), 	STRUM("1A7"), 	STRUM("1D7"),	STRUM("1D7"),
-		{"0",2}
-};
+//#define STRUM(x) {x, T_STEP*3}, {x, T_STEP*2}, {x, T_STEP}
+//accordInfoString_t gAccordSequence[] = {
+//		STRUM("1G"),	STRUM("1Em"),	STRUM("1C"),	STRUM("1D"),
+//		STRUM("1G"),	STRUM("1G"),	STRUM("1G"), 	STRUM("1G"), 	STRUM("1D7"), 	STRUM("1D7"), 	STRUM("1D7"), 	STRUM("1D7"),
+//		STRUM("1Am7"),	STRUM("1D7"), 	STRUM("1Am7"), 	STRUM("1D7"), 	STRUM("1Am7"), 	STRUM("1D7"), 	STRUM("1G"), 	STRUM("1G"),
+//		STRUM("1G"),	STRUM("1G"), 	STRUM("1G"), 	STRUM("1G"), 	STRUM("1D7"), 	STRUM("1D7"), 	STRUM("1D7"), 	STRUM("1D7"),
+//		STRUM("1Am7"),	STRUM("1D7"), 	STRUM("1Am7"), 	STRUM("1D7"), 	STRUM("1Am7"), 	STRUM("1D7"), 	STRUM("1G"), 	STRUM("1G"),
+//		STRUM("1C"),	STRUM("1C"), 	STRUM("1C"), 	STRUM("1C"), 	STRUM("2Bm"), 	STRUM("2Bm"), 	STRUM("2Bm"), 	STRUM("2Bm"),
+//		STRUM("1Am"),	STRUM("1Emmaj7"), STRUM("1Em7"), STRUM("1Em7"), STRUM("1A7"), 	STRUM("1A7"), 	STRUM("1D7"),	STRUM("1D7"),
+//		{"0",2}
+//};
 
 // https://tabs.ultimate-guitar.com/tab/imagine-dragons/demons-chords-1148110
 //#define STRUM(x) {x, T_STEP},{x, T_STEP},{x, T_STEP},{x, T_STEP},{x, T_STEP},{x, T_STEP},{x, T_STEP},{x, T_STEP}
@@ -49,6 +49,18 @@ accordInfoString_t gAccordSequence[] = {
 //		STRUM("G"),
 //		{"0",2}
 //};
+
+#define STRUM(x) {x, T_STEP}, {x, T_STEP*0.5}, {x, T_STEP*1.5}
+#define STRUM2(x) STRUM(x),STRUM(x)
+accordInfoString_t gAccordSequence[] = {
+		STRUM2("3G"),STRUM("3G"),STRUM("3C"),STRUM("3G"),
+		STRUM("3C"),STRUM("3G"),
+		STRUM("3A7"),STRUM("3D7"),
+		STRUM2("3G"),STRUM("3G"),STRUM("3C"),STRUM("3G"),
+		STRUM("3C"),STRUM("3G"),
+		STRUM("3D7"),STRUM("3G"),
+		{"0",2}
+};
 
 // @formatter:on
 
