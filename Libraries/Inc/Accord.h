@@ -8,6 +8,11 @@
 
 #define randInRange(min, max) ((rand() % (int)(((max) + 1) - (min))) + (min))
 
+typedef struct {
+	char chord[4];
+	float time;
+} accordInfo_t;
+
 class Accord {
 private:
 	class Note {

@@ -1,10 +1,7 @@
 #ifndef INC_ACCORDTASK_H_
 #define INC_ACCORDTASK_H_
 
-typedef struct {
-	char chord[4];
-	float time;
-} accordInfo_t;
+#include "Accord.h"
 
 void StartAccordTask(void *argument);
 

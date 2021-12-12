@@ -5,17 +5,14 @@
 #include <memory>
 #include <string>
 #include <stdlib.h>
-
-#include "Accord.h"
+#include "queue.h"
 
 extern osThreadId_t AccordTaskHandle;
-static std::unique_ptr<Accord> gAccord;
+int16_t gAudioBuffer[BUFF_SIZE * 2] = { 0 };
+static std::unique_ptr<Accord> gCurrentAccord;
+extern QueueHandle_t chordQueue;
 
-//std::string gChords = "Am|C|D|F|Am|C|D|F||";
 static uint16_t position = 0;
-//std::string substringas = "";
-//int16_t temp;
-
 static std::vector<std::string> gChords = { "C", "D", "E", "F", "G", "A" };
 
 void fillBuffer(uint8_t part);
@@ -24,8 +21,7 @@ void StartAccordTask(void *argument) {
 	uint8_t partN = 0;
 	if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_AUTO, 70, SAMPLING_FREQ) != AUDIO_OK) Error_Handler();
 
-	gAccord.reset(new Accord( { 0 }, 5, 0.01));
-	position++;
+	gCurrentAccord.reset(new Accord( { 0 }, 1, 0));
 
 	fillBuffer(0);
 	fillBuffer(1);
@@ -33,26 +29,27 @@ void StartAccordTask(void *argument) {
 	BSP_AUDIO_OUT_Play((uint16_t*) gAudioBuffer, BUFF_SIZE * 2);
 
 	for (;;) {
+		fillBuffer(partN);
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
 		if (partN == 1) BSP_AUDIO_OUT_ChangeBuffer((uint16_t*) gAudioBuffer, BUFF_SIZE * 2);
 
-		fillBuffer(partN);
-
-		partN = !partN;
+		partN ^= 1;
 	}
 }
 
 void fillBuffer(uint8_t part) {
-	if (gAccord->reset) {
+	if (gCurrentAccord->reset) {
+		accordInfo_t newAccord;
 //		TODO paimt is eiles struktura
-
-		gAccord.reset(new Accord(CHORD[gChords[position]], 2, 0.01));
-		position = position + 1 >= (uint16_t) gChords.size() ? 0 : position + 1;
+		if (xQueueReceive(chordQueue, (void*) &newAccord, portMAX_DELAY)) {
+			gCurrentAccord.reset(new Accord(CHORD[gChords[position]], 1, 0.01));
+			position = position + 1 >= (uint16_t) gChords.size() ? 0 : position + 1;
+		}
 	}
 
 	for (int i = (part ? BUFF_SIZE / 2 : 0); i < (part ? BUFF_SIZE : BUFF_SIZE / 2); i++) {
-		gAudioBuffer[(i * 2)] = gAudioBuffer[(i * 2) + 1] = (int16_t) gAccord->GetNext();
+		gAudioBuffer[(i * 2)] = gAudioBuffer[(i * 2) + 1] = (int16_t) gCurrentAccord->GetNext();
 	}
 }
 
