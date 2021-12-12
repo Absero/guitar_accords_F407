@@ -3,36 +3,56 @@
 #include "cmsis_os.h"
 #include "stm32f4_discovery_audio.h"
 #include <memory>
+#include <string>
+#include <stdlib.h>
 
 #include "Accord.h"
 
 extern osThreadId_t AccordTaskHandle;
+static std::unique_ptr<Accord> gAccord;
 
-#define newaccord new Accord( {80}, 3, 0.01)
-std::unique_ptr<Accord> gAccord;
+//std::string gChords = "Am|C|D|F|Am|C|D|F||";
+static uint16_t position = 0;
+//std::string substringas = "";
+//int16_t temp;
+
+static std::vector<std::string> gChords = { "C", "D", "E", "F", "G", "A" };
+
+void fillBuffer(uint8_t part);
 
 void StartAccordTask(void *argument) {
 	uint8_t partN = 0;
 	if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_AUTO, 70, SAMPLING_FREQ) != AUDIO_OK) Error_Handler();
 
-	gAccord.reset(newaccord);
+	gAccord.reset(new Accord( { 0 }, 5, 0.01));
+	position++;
 
-	for (int i = 0; i < BUFF_SIZE; i++) {
-		gAudioBuffer[(i * 2)] = gAudioBuffer[(i * 2) + 1] = (int16_t) gAccord->GetNext();
-	}
+	fillBuffer(0);
+	fillBuffer(1);
 
 	BSP_AUDIO_OUT_Play((uint16_t*) gAudioBuffer, BUFF_SIZE * 2);
 
 	for (;;) {
-		ulTaskNotifyTake( pdTRUE, portMAX_DELAY);
-		if (partN == 1) BSP_AUDIO_OUT_ChangeBuffer((uint16_t*) gAudioBuffer, BUFF_SIZE * 2);
-		if (gAccord->reset) gAccord.reset(newaccord);
+		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
-		for (int i = (partN ? BUFF_SIZE / 2 : 0); i < (partN ? BUFF_SIZE : BUFF_SIZE / 2); i++) {
-			gAudioBuffer[(i * 2)] = gAudioBuffer[(i * 2) + 1] = (int16_t) gAccord->GetNext();
-		}
+		if (partN == 1) BSP_AUDIO_OUT_ChangeBuffer((uint16_t*) gAudioBuffer, BUFF_SIZE * 2);
+
+		fillBuffer(partN);
 
 		partN = !partN;
+	}
+}
+
+void fillBuffer(uint8_t part) {
+	if (gAccord->reset) {
+//		TODO paimt is eiles struktura
+
+		gAccord.reset(new Accord(CHORD[gChords[position]], 2, 0.01));
+		position = position + 1 >= (uint16_t) gChords.size() ? 0 : position + 1;
+	}
+
+	for (int i = (part ? BUFF_SIZE / 2 : 0); i < (part ? BUFF_SIZE : BUFF_SIZE / 2); i++) {
+		gAudioBuffer[(i * 2)] = gAudioBuffer[(i * 2) + 1] = (int16_t) gAccord->GetNext();
 	}
 }
 

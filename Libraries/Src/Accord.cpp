@@ -2,10 +2,17 @@
 
 Accord::Note::Note(uint32_t f, float delayN) {
 	this->delayN = delayN;
-	N = (uint32_t) (SAMPLING_FREQ / f - 0.5);
-	wavetable.resize(N);
-	for (uint32_t i = 0; i < N; i++)
-		wavetable[i] = randInRange(-10000, 10000);
+	if (f > 0) {
+		N = (uint32_t) (SAMPLING_FREQ / f - 0.5);
+		wavetable.resize(N);
+		for (uint32_t i = 0; i < N; i++)
+			wavetable[i] = randInRange(-10000, 10000);
+	} else {
+		N = 1;
+		wavetable.resize(N);
+		for (uint32_t i = 0; i < N; i++)
+			wavetable[i] = 0;
+	}
 }
 
 float Accord::Note::GetNext() {

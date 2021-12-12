@@ -26,6 +26,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "queue.h"
 #include "AccordTask.h"
 /* USER CODE END Includes */
 
@@ -49,6 +50,7 @@ typedef StaticQueue_t osStaticMessageQDef_t;
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
 int16_t gAudioBuffer[BUFF_SIZE * 2] = { 0 };
+QueueHandle_t chordQueue;
 
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
@@ -112,7 +114,7 @@ void MX_FREERTOS_Init(void) {
 	qAccordSTRHandle = osMessageQueueNew(5, sizeof(uint16_t), &qAccordSTR_attributes);
 
 	/* USER CODE BEGIN RTOS_QUEUES */
-	/* add queues, ... */
+	chordQueue = xQueueCreate(10, sizeof(accordInfo_t)); //length, item size
 	/* USER CODE END RTOS_QUEUES */
 
 	/* Create the thread(s) */
@@ -143,7 +145,8 @@ void StartDefaultTask(void *argument) {
 	/* USER CODE BEGIN StartDefaultTask */
 	/* Infinite loop */
 	for (;;) {
-		osDelay(1000);
+		accordInfo_t accI;
+		xQueueSend(chordQueue, (void* ) &accI, portMAX_DELAY);
 		HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
 	}
 	/* USER CODE END StartDefaultTask */
